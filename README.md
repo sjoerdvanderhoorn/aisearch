@@ -9,4 +9,22 @@ Prototype of using [GPT-3](https://openai.com/api/) to answer search results (pr
 3. Open the AI Search page (by default; [/api/aisearch/](http://localhost:1880/api/aisearch/).
 4. Typ your search query.
 
-# Screenshots and examples
+# Screenshots and video
+
+This video shows an example of a search with follow up questions:
+
+![name]([https://user-images.githubusercontent.com/sjoerdvanderhoorn/aisearch/blob/main/housespeaker.mp4?raw=true](https://user-images.githubusercontent.com/24693534/217352642-dcb12348-ae7b-45ee-9a65-219825c82340.mp4))
+
+
+
+## Main search page
+
+<img src="aisearch.png">
+
+## Search examples
+| Topic | Screenshot |
+| --- | --- |
+| "Chinese balloon" | <img src="chineseballoon.png" width="30%"> |
+| "Earthquake" | <img src="earthquake.png" width="30%"> |
+| "Tennis" | <img src="tennis.png" width="30%"> |
+

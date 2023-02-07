@@ -18,12 +18,12 @@ https://user-images.githubusercontent.com/24693534/217353202-73e9c3d6-fb67-41f8-
 
 ## Main search page
 
-<img src="aisearch.png">
+<img src="https://raw.githubusercontent.com/sjoerdvanderhoorn/aisearch/main/aisearch.png">
 
 ## Search examples
 | Topic | Screenshot |
 | --- | --- |
-| "Chinese balloon" | <img src="chineseballoon.png" width="30%"> |
-| "Earthquake" | <img src="earthquake.png" width="30%"> |
-| "Tennis" | <img src="tennis.png" width="30%"> |
+| "Chinese balloon" | <img src="https://raw.githubusercontent.com/sjoerdvanderhoorn/aisearch/main/chineseballoon.png" width="30%"> |
+| "Earthquake" | <img src="https://raw.githubusercontent.com/sjoerdvanderhoorn/aisearch/main/earthquake.png" width="30%"> |
+| "Tennis" | <img src="https://raw.githubusercontent.com/sjoerdvanderhoorn/aisearch/main/tennis.png" width="30%"> |
 

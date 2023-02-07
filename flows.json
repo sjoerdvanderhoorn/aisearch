@@ -1,0 +1,577 @@
+[
+    {
+        "id": "52e7d2e7e0ec23ca",
+        "type": "http in",
+        "z": "632ad6779f17902d",
+        "name": "",
+        "url": "aisearch",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 410,
+        "y": 80,
+        "wires": [
+            [
+                "19a4b89cd070142e"
+            ]
+        ]
+    },
+    {
+        "id": "19a4b89cd070142e",
+        "type": "function",
+        "z": "632ad6779f17902d",
+        "name": "Has Query",
+        "func": "if (msg.payload.q) {\n    return [msg,null];\n} else {\n    return [null, msg];\n}\n",
+        "outputs": 2,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 590,
+        "y": 80,
+        "wires": [
+            [
+                "004a4fda8ca9fbc1"
+            ],
+            [
+                "3140d99aca7ddcc0"
+            ]
+        ]
+    },
+    {
+        "id": "004a4fda8ca9fbc1",
+        "type": "credentials",
+        "z": "632ad6779f17902d",
+        "name": "",
+        "props": [
+            {
+                "value": "openaicredentials",
+                "type": "msg"
+            }
+        ],
+        "x": 830,
+        "y": 40,
+        "wires": [
+            [
+                "5006188443564d6f"
+            ]
+        ]
+    },
+    {
+        "id": "d375641c3d7c1447",
+        "type": "group",
+        "z": "632ad6779f17902d",
+        "name": "DuckDuckGo",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "5006188443564d6f",
+            "7f913b3c4e5537a3",
+            "62e808a5295163d9",
+            "7dd252dca17f1ded"
+        ],
+        "x": 34,
+        "y": 199,
+        "w": 632,
+        "h": 82
+    },
+    {
+        "id": "5006188443564d6f",
+        "type": "function",
+        "z": "632ad6779f17902d",
+        "g": "d375641c3d7c1447",
+        "name": "URL",
+        "func": "msg.query = msg.payload.q;\nmsg.followup = msg.payload.f;\nmsg.history = msg.payload.h;\n\nmsg.url = `https://duckduckgo.com/html/?q=${msg.query}`;\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 110,
+        "y": 240,
+        "wires": [
+            [
+                "7f913b3c4e5537a3"
+            ]
+        ]
+    },
+    {
+        "id": "7f913b3c4e5537a3",
+        "type": "http request",
+        "z": "632ad6779f17902d",
+        "g": "d375641c3d7c1447",
+        "name": "DuckDuck Go",
+        "method": "GET",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 260,
+        "y": 240,
+        "wires": [
+            [
+                "62e808a5295163d9"
+            ]
+        ]
+    },
+    {
+        "id": "62e808a5295163d9",
+        "type": "cheerio",
+        "z": "632ad6779f17902d",
+        "g": "d375641c3d7c1447",
+        "name": "",
+        "tag": "div.results_links",
+        "ret": "object",
+        "as": "single",
+        "map": [
+            {
+                "search": "h2.result__title",
+                "ret": "text",
+                "replace": "title",
+                "attr": ""
+            },
+            {
+                "search": "a.result__url",
+                "ret": "text",
+                "replace": "displayLink",
+                "attr": ""
+            },
+            {
+                "search": "a.result__snippet",
+                "ret": "text",
+                "replace": "htmlSnippet",
+                "attr": ""
+            },
+            {
+                "search": "a.result__url",
+                "ret": "attribute",
+                "replace": "link",
+                "attr": "href"
+            }
+        ],
+        "xmlMode": false,
+        "decodeEntities": false,
+        "lowerCaseTags": false,
+        "lowerCaseAttributeNames": false,
+        "recognizeCDATA": false,
+        "recognizeSelfClosing": false,
+        "x": 440,
+        "y": 240,
+        "wires": [
+            [
+                "7dd252dca17f1ded"
+            ]
+        ]
+    },
+    {
+        "id": "7dd252dca17f1ded",
+        "type": "function",
+        "z": "632ad6779f17902d",
+        "g": "d375641c3d7c1447",
+        "name": "Clean",
+        "func": "msg.results = msg.payload.map(item => {\n    return {\n        title: item.title.trim(),\n        displayLink: item.displayLink.trim(),\n        htmlSnippet: item.htmlSnippet.trim(),\n        link: item.link.trim()\n    }\n}).slice(0, 6);\n\nmsg.payload = msg.payload.map(x => \"https://\" + x.displayLink.trim()).slice(0, 6);\n\n\n\n\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 590,
+        "y": 240,
+        "wires": [
+            [
+                "284a2075f5c544eb"
+            ]
+        ]
+    },
+    {
+        "id": "a1b06c7534da6ebe",
+        "type": "group",
+        "z": "632ad6779f17902d",
+        "name": "Get results",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "ddc27782bf811bcf",
+            "284a2075f5c544eb",
+            "16207a4df482b767",
+            "254c584bbe9c885b",
+            "7b77dbc8cf6c5829"
+        ],
+        "x": 34,
+        "y": 299,
+        "w": 732,
+        "h": 82
+    },
+    {
+        "id": "ddc27782bf811bcf",
+        "type": "http request",
+        "z": "632ad6779f17902d",
+        "g": "a1b06c7534da6ebe",
+        "name": "Fetch site",
+        "method": "GET",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 400,
+        "y": 340,
+        "wires": [
+            [
+                "7b77dbc8cf6c5829"
+            ]
+        ]
+    },
+    {
+        "id": "284a2075f5c544eb",
+        "type": "split",
+        "z": "632ad6779f17902d",
+        "g": "a1b06c7534da6ebe",
+        "name": "",
+        "splt": "\\n",
+        "spltType": "str",
+        "arraySplt": 1,
+        "arraySpltType": "len",
+        "stream": false,
+        "addname": "",
+        "x": 110,
+        "y": 340,
+        "wires": [
+            [
+                "254c584bbe9c885b"
+            ]
+        ]
+    },
+    {
+        "id": "16207a4df482b767",
+        "type": "join",
+        "z": "632ad6779f17902d",
+        "g": "a1b06c7534da6ebe",
+        "name": "",
+        "mode": "auto",
+        "build": "object",
+        "property": "payload",
+        "propertyType": "msg",
+        "key": "topic",
+        "joiner": "\\n",
+        "joinerType": "str",
+        "accumulate": "false",
+        "timeout": "",
+        "count": "",
+        "reduceRight": false,
+        "x": 690,
+        "y": 340,
+        "wires": [
+            [
+                "c8ef76f6719da529"
+            ]
+        ]
+    },
+    {
+        "id": "254c584bbe9c885b",
+        "type": "change",
+        "z": "632ad6779f17902d",
+        "g": "a1b06c7534da6ebe",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "url",
+                "pt": "msg",
+                "to": "payload",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 250,
+        "y": 340,
+        "wires": [
+            [
+                "ddc27782bf811bcf"
+            ]
+        ]
+    },
+    {
+        "id": "7b77dbc8cf6c5829",
+        "type": "function",
+        "z": "632ad6779f17902d",
+        "g": "a1b06c7534da6ebe",
+        "name": "Parse HTML",
+        "func": "msg.payload = msg.payload.replace(/<style((.|\\n)*?)<\\/style>/gim, \"\"); // Remove <style> tags\nmsg.payload = msg.payload.replace(/<script((.|\\n)*?)<\\/script>/gim, \"\"); // Remove <script> tags\nmsg.payload = msg.payload.replace(/>(.{0,200})</gim, \"><\"); // Remove all text shorter than 100 characters\nmsg.payload = msg.payload.replace(/<((.|\\n)*?)>/gim, \"\"); // Remove all HTML tags\nmsg.payload = msg.payload.replace(/\\n/gim, \" \"); // Remove newlines\nmsg.payload = msg.payload.replace(/\\t/gim, \" \"); // Remove tabs\nmsg.payload = msg.payload.replace(/(.)\\1\\1/gim, \"\"); // Remove all characters that repeat 3 times or more\nmsg.payload = msg.payload.replace(/(.)\\1\\1/gim, \"\"); // Remove all characters that repeat 3 times or more\nmsg.payload = msg.payload.replace(/(.)\\1\\1/gim, \"\"); // Remove all characters that repeat 3 times or more\nmsg.payload = msg.payload.replace(/(.)\\1\\1/gim, \"\"); // Remove all characters that repeat 3 times or more\nmsg.payload = msg.payload.replace(/(.)\\1\\1/gim, \"\"); // Remove all characters that repeat 3 times or more\nmsg.payload = msg.payload.replace(/(.)\\1\\1/gim, \"\"); // Remove all characters that repeat 3 times or more\nmsg.payload = msg.payload.substr(0, 500);\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 550,
+        "y": 340,
+        "wires": [
+            [
+                "16207a4df482b767"
+            ]
+        ]
+    },
+    {
+        "id": "9ce777774060b83d",
+        "type": "group",
+        "z": "632ad6779f17902d",
+        "name": "AI",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "191c682cee4d8370",
+            "c8ef76f6719da529",
+            "adec3c6339f5d6e3",
+            "7bdfb1330fe42b33"
+        ],
+        "x": 34,
+        "y": 399,
+        "w": 652,
+        "h": 82
+    },
+    {
+        "id": "191c682cee4d8370",
+        "type": "http request",
+        "z": "632ad6779f17902d",
+        "g": "9ce777774060b83d",
+        "name": "OpenAI",
+        "method": "POST",
+        "ret": "obj",
+        "paytoqs": "query",
+        "url": "https://api.openai.com/v1/completions",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [
+            {
+                "keyType": "other",
+                "keyValue": "Content-Type",
+                "valueType": "other",
+                "valueValue": "application/json"
+            },
+            {
+                "keyType": "other",
+                "keyValue": "Authorization",
+                "valueType": "msg",
+                "valueValue": "openaicredentials"
+            }
+        ],
+        "x": 280,
+        "y": 440,
+        "wires": [
+            [
+                "adec3c6339f5d6e3"
+            ]
+        ]
+    },
+    {
+        "id": "c8ef76f6719da529",
+        "type": "function",
+        "z": "632ad6779f17902d",
+        "g": "9ce777774060b83d",
+        "name": "GPT query",
+        "func": "\nvar prompt = `Answer questions \"${msg.followup ? msg.followup : msg.query}\" using the below text.`;\nif (msg.history) {\n    prompt += `For context, these are previous questions that were asked: ${msg.history}`;\n}\nprompt += `Text:\\n\\n${msg.payload.join(\"\\n\")}`\nprompt += `\\n\\nAnswer: `\n\nmsg.url = null;\n\nmsg.payload = {\n    \"model\": \"text-davinci-003\",\n    \"prompt\": prompt,\n    \"temperature\": 0,\n    \"max_tokens\": 40,\n    \"top_p\": 1,\n    \"frequency_penalty\": 0,\n    \"presence_penalty\": 0,\n    \"stop\": [\"\\n\"]\n}\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 130,
+        "y": 440,
+        "wires": [
+            [
+                "191c682cee4d8370"
+            ]
+        ]
+    },
+    {
+        "id": "adec3c6339f5d6e3",
+        "type": "function",
+        "z": "632ad6779f17902d",
+        "g": "9ce777774060b83d",
+        "name": "Answer",
+        "func": "msg.openai = msg.payload;\n\nmsg.answer = msg.payload.choices[0].text;\n\nmsg.payload = {\n    query: msg.query,\n    followup: msg.followup,\n    answer: msg.answer,\n    results: msg.results\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 420,
+        "y": 440,
+        "wires": [
+            [
+                "7bdfb1330fe42b33"
+            ]
+        ]
+    },
+    {
+        "id": "7bdfb1330fe42b33",
+        "type": "switch",
+        "z": "632ad6779f17902d",
+        "g": "9ce777774060b83d",
+        "name": "Is Followup",
+        "property": "followup",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "null"
+            },
+            {
+                "t": "nnull"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 590,
+        "y": 440,
+        "wires": [
+            [
+                "3140d99aca7ddcc0"
+            ],
+            [
+                "6eb1d94111a37975"
+            ]
+        ]
+    },
+    {
+        "id": "f83f0e8a3978b906",
+        "type": "group",
+        "z": "632ad6779f17902d",
+        "name": "Output - Full Page",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "c0512ec649c72d5c",
+            "3140d99aca7ddcc0",
+            "99f24ecd268857c7"
+        ],
+        "x": 834,
+        "y": 259,
+        "w": 292,
+        "h": 142
+    },
+    {
+        "id": "c0512ec649c72d5c",
+        "type": "http response",
+        "z": "632ad6779f17902d",
+        "g": "f83f0e8a3978b906",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 1050,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "3140d99aca7ddcc0",
+        "type": "template",
+        "z": "632ad6779f17902d",
+        "g": "f83f0e8a3978b906",
+        "name": "HTML",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "<html>\n<head>\n  <title>AI Search</title>\n  <link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css\" integrity=\"sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm\" crossorigin=\"anonymous\">\n  <style>\n    h1 { color: #111; font-family: 'Helvetica Neue', sans-serif; font-size: 80px; font-weight: bold; letter-spacing: -1px; line-height: 3; text-align: center; }\n  </style>\n</head>\n\n<body>\n  \n  <div class=\"container\">\n\n    <h1>AI Search</h1>\n\n    {{^payload.query}}\n\n      <div class=\"jumbotron jumbotron-fluid\">\n        <div class=\"container\">\n          <form action=\"\" method=\"get\">\n            <center>\n              <input type=\"text\" name=\"q\" class=\"form-control\" placeholder=\"Ask your question...\" value=\"{{payload.query}}\" style=\"height: 50px; max-width: 500px; padding-left: 20px; padding-right: 20px; border-radius: 25px; text-align: center;\">\n              <div style=\"padding-top: 20px;\">\n                <input type=\"submit\" class=\"btn btn-light\" value=\"Answer Question\">\n              </div>\n            </center>\n          </form>\n        </div>\n      </div>\n      \n      <p class=\"lead\">\n        Example searches:<br/>\n          <a href=\"?q=Which man and woman won the Australian Open in 2023\">Which man and woman won the Australian Open in 2023</a> &sdot; \n          <a href=\"?q=What happened to the Chinese balloon\">What happened to the Chinese balloon</a> &sdot;\n          <a href=\"?q=How many people died from the quake in Turkye\">How many people died from the quake in Turkye</a>\n      </p>\n    {{/payload.query}}\n\n    {{#payload.query}}\n\n      <div id=\"conversation\">\n          \n        <div class=\"jumbotron jumbotron-fluid\" style=\"border-radius: 100px;\">\n          <div class=\"container\">\n            <blockquote class=\"blockquote text-center\">\n              <p class=\"mb-0\"><span class=\"text-muted\">&ldquo;</span> {{payload.query}} <span class=\"text-muted\">&rdquo;</span></p>\n            </blockquote>\n          </div>\n        </div>\n\n        <div class=\"jumbotron jumbotron-fluid bg-warning\" style=\"border-radius: 100px;\">\n          <div class=\"container\">\n            <blockquote class=\"blockquote text-center\">\n              <p class=\"mb-0\"><span class=\"text-muted\">&ldquo;</span> {{payload.answer}} <span class=\"text-muted\">&rdquo;</span></p>\n            </blockquote>\n          </div>\n        </div>\n\n      </div>\n\n      <div class=\"jumbotron jumbotron-fluid\">\n        <div class=\"container\">\n          <form onsubmit=\"followup(); return false;\">\n            <center>\n              <input type=\"text\" id=\"f\" class=\"form-control\" placeholder=\"Follow up question...\" value=\"\" style=\"height: 50px; max-width: 500px; padding-left: 20px; padding-right: 20px; border-radius: 25px; text-align: center;\">\n              <div style=\"padding-top: 20px;\">\n                <input type=\"submit\" class=\"btn btn-light\" value=\"Answer Question\">\n              </div>\n            </center>\n          </form>\n        </div>\n      </div>\n\n      <div class=\"card-columns\">\n        {{#payload.results}}\n        <div class=\"card\">\n          <div class=\"card-body\">\n            <h5 class=\"card-title\"><a href=\"{{link}}\" target=\"_blank\">{{title}}</a></h5>\n            <p class=\"card-text\">{{{htmlSnippet}}}</p>\n            <p class=\"card-text\"><small class=\"text-muted\"><a href=\"{{link}}\" target=\"_blank\">{{displayLink}}</a></small></p>\n          </div>\n        </div>\n        {{/payload.results}}\n      </div>\n\n      <div class=\"text-center\">\n        <a href=\"https://www.google.com/search?q={{payload.query}}\" role=\"button\" class=\"btn btn-primary\">Load more results...</a>\n      </div>\n\n    {{/payload.query}}\n\n  </div>\n\n  <script>\n\n    var historic = `{{payload.query}}`;\n\n    function followup()\n    {\n      var followup = document.getElementById(\"f\").value;\n      \n      document.getElementById(\"f\").value = \"...\";\n      document.getElementById(\"f\").disabled = true;\n\n      fetch(`?q={{payload.query}}&f=${followup}&h=${historic}`)\n        .then((response) => response.text())\n        .then((data) => \n        {\n          document.getElementById(\"conversation\").innerHTML += data;\n          document.getElementById(\"f\").value = \"\";\n          document.getElementById(\"f\").disabled = false;\n          document.getElementById(\"f\").focus();\n        });\n\n      historic += \"\\n\" + followup;\n      \n    }\n  </script>\n</body>\n</html>",
+        "output": "str",
+        "x": 910,
+        "y": 360,
+        "wires": [
+            [
+                "c0512ec649c72d5c"
+            ]
+        ]
+    },
+    {
+        "id": "99f24ecd268857c7",
+        "type": "template",
+        "z": "632ad6779f17902d",
+        "g": "f83f0e8a3978b906",
+        "name": "Test data",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "json",
+        "syntax": "mustache",
+        "template": "{\"query\":\"what is up with the chinese balloon\",\"answer\":\" It appears that the Chinese spy balloon was shot down by an F-22 off the coast of South\",\"results\":[{\"kind\":\"customsearch#result\",\"title\":\"U.S. Recovery of Alleged Spy Balloon Continues: Updates\",\"htmlTitle\":\"U.S. Recovery of Alleged Spy <b>Balloon</b> Continues: Updates\",\"link\":\"https://nymag.com/intelligencer/2023/02/what-is-up-with-this-chinese-spy-balloon.html\",\"displayLink\":\"nymag.com\",\"snippet\":\"13 hours ago ... China swears it's a wayward weather balloon. ... The Associated Press reports it's possible wind could have taken over the balloon's flight plan:.\",\"htmlSnippet\":\"13 hours ago <b>...</b> <b>China</b> swears it&#39;s a wayward weather <b>balloon</b>. ... The Associated Press reports it&#39;s possible wind could have taken over the <b>balloon&#39;s</b> flight plan:.\",\"formattedUrl\":\"https://nymag.com/.../2023/.../what-is-up-with-this-chinese-spy-balloon.html\",\"htmlFormattedUrl\":\"https://nymag.com/.../2023/.../<b>what-is-up</b>-with-this-<b>chinese</b>-spy-<b>balloon</b>.html\",\"pagemap\":{\"cse_thumbnail\":[{\"src\":\"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSUcUTT6h4iaR2pBQdPq96yxYt0GWiBhG9g2WGzKDODS66b5ZchwchQh10v\",\"width\":\"310\",\"height\":\"163\"}],\"metatags\":[{\"og:image\":\"https://pyxis.nymag.com/v1/imgs/e07/403/12f6f727dec41315bcaec9cfc054c979df-weather-balloon.1x.rsocial.w1200.jpg\",\"article:published_time\":\"2023-02-06T16:25:00.000-05:00\",\"twitter:card\":\"summary_large_image\",\"sailthru.tags\":\"what we know, unidentified aerial phenomena, china\",\"og:site_name\":\"Intelligencer\",\"apple-mobile-web-app-title\":\"Intelligencer\",\"vertical\":\"Intelligencer\",\"type\":\"Article\",\"msapplication-tileimage\":\"https://assets.nymag.com/media/sites/intelligencer/icon.144x144.png\",\"og:description\":\"China claimed on Monday that a second similar balloon seen over Latin America last week was also just a wayward civilian craft.\",\"twitter:image\":\"https://pyxis.nymag.com/v1/imgs/e07/403/12f6f727dec41315bcaec9cfc054c979df-weather-balloon.2x.rsocial.w600.jpg\",\"article:publisher\":\"https://www.facebook.com/NewYorkMag\",\"twitter:site\":\"@intelligencer\",\"application-name\":\"Intelligencer\",\"msapplication-tilecolor\":\"#ff5656\",\"twitter:title\":\"U.S. Recovery of Alleged Spy Balloon Continues: Updates\",\"og:type\":\"article\",\"author\":\"Chas Danner\",\"og:title\":\"U.S. Recovery of Alleged Spy Balloon Continues: Updates\",\"article:tag\":\"what we know, unidentified aerial phenomena, china\",\"parsely-tags\":\"what we know, unidentified aerial phenomena, china, featuretype:news-aggregation, featuretype:breaking-news-original reporting\",\"fb:app_id\":\"120608177953522\",\"viewport\":\"width=device-width,initial-scale=1,shrink-to-fit=no\",\"twitter:description\":\"China claimed on Monday that a second similar balloon seen over Latin America last week was also just a wayward civilian craft.\",\"og:url\":\"https://nymag.com/intelligencer/2023/02/what-is-up-with-this-chinese-spy-balloon.html\",\"article:opinion\":\"false\"}],\"cse_image\":[{\"src\":\"https://pyxis.nymag.com/v1/imgs/e07/403/12f6f727dec41315bcaec9cfc054c979df-weather-balloon.1x.rsocial.w1200.jpg\"}]}},{\"kind\":\"customsearch#result\",\"title\":\"Look! Up in the Sky! It's a … Chinese Spy Balloon? - The New York ...\",\"htmlTitle\":\"Look! <b>Up</b> in the Sky! It&#39;s a … <b>Chinese</b> Spy <b>Balloon</b>? - The New York ...\",\"link\":\"https://www.nytimes.com/2023/02/04/us/politics/chinese-spy-balloon-obsession.html\",\"displayLink\":\"www.nytimes.com\",\"snippet\":\"3 days ago ... WASHINGTON — As far as spy thrillers go, this one unfolded pretty slowly: A giant Chinese spy balloon air-dawdled its way toward the Eastern ...\",\"htmlSnippet\":\"3 days ago <b>...</b> WASHINGTON — As far as spy thrillers go, this one unfolded pretty slowly: A giant <b>Chinese</b> spy <b>balloon</b> air-dawdled its way toward the Eastern&nbsp;...\",\"formattedUrl\":\"https://www.nytimes.com/2023/02/04/.../chinese-spy-balloon-obsession.html\",\"htmlFormattedUrl\":\"https://www.nytimes.com/2023/02/04/.../<b>chinese</b>-spy-<b>balloon</b>-obsession.html\",\"pagemap\":{\"cse_thumbnail\":[{\"src\":\"https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcTME5f-k8Ye0uSSdZM-ckQDGbvhRlidytfbrpa_VjoO-pxeGeY2YWK0Z9i3\",\"width\":\"310\",\"height\":\"162\"}],\"metatags\":[{\"og:image\":\"https://static01.nyt.com/images/2023/02/04/multimedia/04-dc-balloon/04-dc-balloon--facebookJumbo.jpg\",\"nyt_uri\":\"nyt://article/10260e7c-6a80-5089-afd9-b483a51f445f\",\"twitter:app:id:googleplay\":\"com.nytimes.android\",\"twitter:card\":\"summary_large_image\",\"article:published_time\":\"2023-02-04T16:16:09.000Z\",\"pt\":\"article\",\"twitter:url\":\"https://www.nytimes.com/2023/02/04/us/politics/chinese-spy-balloon-obsession.html\",\"pdate\":\"20230204\",\"articleid\":\"100000008755606\",\"al:android:package\":\"com.nytimes.android\",\"al:ipad:app_store_id\":\"357066198\",\"twitter:app:name:googleplay\":\"NYTimes\",\"og:description\":\"How the balloon went from a local sky oddity to an international diplomatic disrupter to “a shriveled Kleenex.”\",\"twitter:image\":\"https://static01.nyt.com/images/2023/02/04/multimedia/04-dc-balloon/04-dc-balloon--videoSixteenByNineJumbo1600.jpg\",\"pst\":\"News\",\"twitter:image:alt\":\"The high-altitude Chinese balloon over Billings, Mont., on Thursday.\",\"al:iphone:app_name\":\"NYTimes\",\"article:modified_time\":\"2023-02-05T15:25:05.000Z\",\"news_keywords\":\"China,Balloons,Spying and Intelligence Agencies,US Foreign Policy,Montana,Billings MT\",\"scg\":\"politics\",\"article:content_tier\":\"metered\",\"msapplication-starturl\":\"https://www.nytimes.com\",\"image\":\"https://static01.nyt.com/images/2023/02/04/multimedia/04-dc-balloon/04-dc-balloon--facebookJumbo.jpg\",\"og:type\":\"article\",\"og:image:alt\":\"The high-altitude Chinese balloon over Billings, Mont., on Thursday.\",\"twitter:title\":\"Look! Up in the Sky! It’s a … Chinese Spy Balloon?\",\"article:section\":\"U.S.\",\"cg\":\"us\",\"pubp_event_id\":\"pubp://event/194de643de9d47889265b19720a0b22e\",\"og:title\":\"Look! Up in the Sky! It’s a … Chinese Spy Balloon?\",\"cn\":\"live-blog-20230204-china-spy-balloon\",\"url\":\"https://www.nytimes.com/2023/02/04/us/politics/chinese-spy-balloon-obsession.html\",\"article:tag\":\"China\",\"al:iphone:url\":\"nytimes://www.nytimes.com/2023/02/04/us/politics/chinese-spy-balloon-obsession.html\",\"al:android:url\":\"nyt://article/10260e7c-6a80-5089-afd9-b483a51f445f\",\"ct\":\"spotlight\",\"twitter:app:url:googleplay\":\"nyt://article/10260e7c-6a80-5089-afd9-b483a51f445f\",\"al:ipad:url\":\"nytimes://www.nytimes.com/2023/02/04/us/politics/chinese-spy-balloon-obsession.html\",\"byl\":\"By Katie Rogers\",\"twitter:description\":\"How the balloon went from a local sky oddity to an international diplomatic disrupter to “a shriveled Kleenex.”\",\"al:iphone:app_store_id\":\"284862083\",\"al:ipad:app_name\":\"NYTimes\",\"og:url\":\"https://www.nytimes.com/2023/02/04/us/politics/chinese-spy-balloon-obsession.html\",\"al:android:app_name\":\"NYTimes\",\"article:opinion\":\"false\"}],\"cse_image\":[{\"src\":\"https://static01.nyt.com/images/2023/02/04/multimedia/04-dc-balloon/04-dc-balloon--facebookJumbo.jpg\"}]}},{\"kind\":\"customsearch#result\",\"title\":\"Don't shoot at Chinese spy balloon, South Carolina sheriff warns ...\",\"htmlTitle\":\"Don&#39;t shoot at <b>Chinese</b> spy <b>balloon</b>, South Carolina sheriff warns ...\",\"link\":\"https://www.foxnews.com/us/dont-shoot-chinese-spy-balloon-south-carolina-sheriff-warns-what-goes-up-will-come-down\",\"displayLink\":\"www.foxnews.com\",\"snippet\":\"3 days ago ... Pentagon officials on Thursday disclosed that a surveillance balloon believed to be of Chinese origin had been tracked flying over Montana.\",\"htmlSnippet\":\"3 days ago <b>...</b> Pentagon officials on Thursday disclosed that a surveillance <b>balloon</b> believed to be of <b>Chinese</b> origin had been tracked flying over Montana.\",\"formattedUrl\":\"https://www.foxnews.com/.../dont-shoot-chinese-spy-balloon-south-carolina- sheriff-warns-what-goes-up-will-come-down\",\"htmlFormattedUrl\":\"https://www.foxnews.com/.../dont-shoot-<b>chinese</b>-spy-<b>balloon</b>-south-carolina- sheriff-warns-what-goes-<b>up</b>-will-come-down\",\"pagemap\":{\"cse_thumbnail\":[{\"src\":\"https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcTKrFnn4H4iOl76Eug0ko61KApkkAFFKTyoOIMHP7glr46_ceT7ppRB7-U\",\"width\":\"300\",\"height\":\"168\"}],\"metatags\":[{\"pagetype\":\"article\",\"dc.publisher\":\"Fox News\",\"og:image\":\"https://static.foxnews.com/foxnews.com/content/uploads/2023/02/Chinese-Spy-Balloon-Plane.jpg\",\"twitter:card\":\"summary_large_image\",\"og:site_name\":\"Fox News\",\"twitter:url\":\"https://www.foxnews.com/us/dont-shoot-chinese-spy-balloon-south-carolina-sheriff-warns-what-goes-up-will-come-down\",\"prism.channel\":\"fnc\",\"dc.format\":\"text/html\",\"og:description\":\"The York County Sheriff's Department in South Carolina warned civilians not to shoot at the Chinese spy balloon as it was spotted overhead Saturday morning.\",\"twitter:image\":\"https://a57.foxnews.com/static.foxnews.com/foxnews.com/content/uploads/2023/02/1024/512/Chinese-Spy-Balloon-Plane.jpg?ve=1&tl=1\",\"prism.aggregationtype\":\"subsection\",\"twitter:site\":\"@foxnews\",\"dc.type\":\"Text.Article\",\"dc.source\":\"Fox News\",\"dcterms.modified\":\"2023-02-04T13:58:34-05:00\",\"dc.creator\":\"Chris Pandolfo\",\"dc.description\":\"The York County Sheriff's Department in South Carolina warned civilians not to shoot at the Chinese spy balloon as it was spotted overhead Saturday morning.\",\"og:type\":\"article\",\"twitter:title\":\"Don't shoot at Chinese spy balloon, South Carolina sheriff warns: 'What goes up will come down'\",\"content-creator\":\"tiger\",\"og:title\":\"Don't shoot at Chinese spy balloon, South Carolina sheriff warns: 'What goes up will come down'\",\"classification-isa\":\"southcarolina,us,airspace,policelaw,china\",\"classification-tags\":\"southcarolina,airspace,policelaw,us,china\",\"dc.date\":\"2023-02-04\",\"dcterms.created\":\"2023-02-04T13:46:08-05:00\",\"classification\":\"/FOX NEWS/US/US REGIONS/SOUTHEAST/South Carolina,/FOX NEWS/US,/FOX NEWS/SCIENCE/Air And Space,/FOX NEWS/US/CRIME/Police And Law Enforcement,/FOX NEWS/WORLD/WORLD REGIONS/China\",\"fb:app_id\":\"113186182048399\",\"viewport\":\"width=device-width, minimum-scale=1.0, initial-scale=1.0\",\"twitter:description\":\"The York County Sheriff's Department in South Carolina warned civilians not to shoot at the Chinese spy balloon as it was spotted overhead Saturday morning.\",\"dc.title\":\"Don't shoot at Chinese spy balloon, South Carolina sheriff warns: 'What goes up will come down'\",\"prism.section\":\"us\",\"dc.identifier\":\"urn:uri:base64:f104e77a-b330-5ad1-873a-8eea015c64c0\",\"dc.language\":\"en-US\",\"og:url\":\"https://www.foxnews.com/us/dont-shoot-chinese-spy-balloon-south-carolina-sheriff-warns-what-goes-up-will-come-down\",\"dcterms.abstract\":\"The York County Sheriff's Department in South Carolina warned civilians not to shoot at the Chinese spy balloon as it was spotted overhead Saturday morning.\",\"article:opinion\":\"false\"}],\"cse_image\":[{\"src\":\"https://static.foxnews.com/foxnews.com/content/uploads/2023/02/Chinese-Spy-Balloon-Plane.jpg\"}]}},{\"kind\":\"customsearch#result\",\"title\":\"Chinese Spy Balloon Has Unexpected Maneuverability - Scientific ...\",\"htmlTitle\":\"<b>Chinese</b> Spy <b>Balloon</b> Has Unexpected Maneuverability - Scientific ...\",\"link\":\"https://www.scientificamerican.com/article/chinese-spy-balloon-has-unexpected-maneuverability/\",\"displayLink\":\"www.scientificamerican.com\",\"snippet\":\"3 days ago ... First, it has been airborne for days, but weather balloons typically remain up for only a couple of hours. The Chinese balloon is also ...\",\"htmlSnippet\":\"3 days ago <b>...</b> First, it has been airborne for days, but weather <b>balloons</b> typically remain <b>up</b> for only a couple of hours. The <b>Chinese balloon</b> is also&nbsp;...\",\"cacheId\":\"5U3nK_P-ItEJ\",\"formattedUrl\":\"https://www.scientificamerican.com/.../chinese-spy-balloon-has-unexpected- maneuverability/\",\"htmlFormattedUrl\":\"https://www.scientificamerican.com/.../<b>chinese</b>-spy-<b>balloon</b>-has-unexpected- maneuverability/\",\"pagemap\":{\"cse_thumbnail\":[{\"src\":\"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTNJILjT6XTeHv2TVelXfi-MYVSf3boRw4bU3TDxyV_fVqkHnzT45UtIAnV\",\"width\":\"283\",\"height\":\"178\"}],\"imageobject\":[{\"url\":\"https://static.scientificamerican.com/sciam/assets/Image/newsletter/salogo.png\"},{\"caption\":\"On Friday U.S. Secretary of State Antony Blinken scrapped a rare Beijing trip aimed at easing escalating tensions between his country and China. The decision was made after the Pentagon said...\",\"description\":\"On Friday U.S. Secretary of State Antony Blinken scrapped a rare Beijing trip aimed at easing escalating tensions between his country and China. The decision was made after the Pentagon said...\",\"url\":\"https://static.scientificamerican.com/sciam/cache/file/A366E454-3B76-488C-AE4E845389704A99_source.jpg?w=590&h=800&2604D9AA-AFA3-4937-B3FE510629597E8A\"}],\"person\":[{\"name\":\"Sophie Bushwick\",\"url\":\"Sophie Bushwick\"}],\"organization\":[{\"name\":\"Scientific American\",\"url\":\"Scientific American\"}],\"metatags\":[{\"og:image\":\"https://static.scientificamerican.com/sciam/cache/file/A366E454-3B76-488C-AE4E845389704A99.jpg\",\"theme-color\":\"#093969\",\"og:type\":\"article\",\"og:image:width\":\"790\",\"twitter:card\":\"summary_large_image\",\"twitter:title\":\"Chinese Spy Balloon Has Unexpected Maneuverability\",\"og:site_name\":\"Scientific American\",\"author\":\"Sophie Bushwick\",\"og:title\":\"Chinese Spy Balloon Has Unexpected Maneuverability\",\"og:image:height\":\"496\",\"msapplication-tileimage\":\"/public/resources/favicons/favicon-196-f10395ba7ecf07756e4b5a82c4795b61.png\",\"og:description\":\"An expert explains why it&rsquo;s so odd that the suspected Chinese spy balloon can change course\",\"fb:pages\":\"340704949293332\",\"twitter:image\":\"https://static.scientificamerican.com/sciam/cache/file/A366E454-3B76-488C-AE4E845389704A99.jpg\",\"referrer\":\"unsafe-url\",\"twitter:site\":\"@sciam\",\"viewport\":\"width=device-width, initial-scale=1, shrink-to-fit=no\",\"com.silverpop.brandeddomains\":\"www.pages04.net,www.scientificamerican.com\",\"og:url\":\"https://www.scientificamerican.com/article/chinese-spy-balloon-has-unexpected-maneuverability/\",\"com.silverpop.cothost\":\"pod4.ibmmarketingcloud.com\"}],\"cse_image\":[{\"src\":\"https://static.scientificamerican.com/sciam/cache/file/A366E454-3B76-488C-AE4E845389704A99.jpg\"}],\"newsarticle\":[{\"image\":\"https://static.scientificamerican.com/sciam/cache/file/A366E454-3B76-488C-AE4E845389704A99.jpg\",\"articlebody\":\"Pentagon officials announced on Thursday that they had detected a Chinese “surveillance balloon” flying over Montana. On Friday the Pentagon’s press secretary said that the balloon is...\",\"articlesection\":\"Defense\",\"headline\":\"Chinese Spy Balloon Has Unexpected Maneuverability\",\"datepublished\":\"2023-02-03\"}]}},{\"kind\":\"customsearch#result\",\"title\":\"What is a suspected Chinese spy balloon doing above the US? | CNN\",\"htmlTitle\":\"What is a suspected <b>Chinese</b> spy <b>balloon</b> doing above the US? | CNN\",\"link\":\"https://www.cnn.com/2023/02/02/asia/us-china-spy-balloon-mission-intl-hnk-ml/index.html\",\"displayLink\":\"www.cnn.com\",\"snippet\":\"4 days ago ... According to Layton, the suspected Chinese balloon is likely collecting information on US communication systems and radars. “Some of these ...\",\"htmlSnippet\":\"4 days ago <b>...</b> According to Layton, the suspected <b>Chinese balloon</b> is likely collecting information on US communication systems and radars. “Some of these&nbsp;...\",\"formattedUrl\":\"https://www.cnn.com/2023/02/02/asia/us-china...balloon.../index.html\",\"htmlFormattedUrl\":\"https://www.cnn.com/2023/02/02/asia/us-<b>china</b>...<b>balloon</b>.../index.html\",\"pagemap\":{\"cse_thumbnail\":[{\"src\":\"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTEDhN3SQvpvveR5EvPIPMYwK7dcAYBSKjpmhbOKhG-ox5bEUkBx6ChFql1\",\"width\":\"300\",\"height\":\"168\"}],\"metatags\":[{\"og:image\":\"https://media.cnn.com/api/v1/images/stellar/prod/230202153440-suspected-chinese-surveillance-balloon.jpg?c=16x9&q=w_800,c_fill\",\"twitter:title\":\"What is a suspected Chinese spy balloon doing above the US? | CNN\",\"og:type\":\"article\",\"twitter:card\":\"summary_large_image\",\"article:published_time\":\"2023-02-03T04:40:17Z\",\"og:site_name\":\"CNN\",\"author\":\"Brad Lendon\",\"og:title\":\"What is a suspected Chinese spy balloon doing above the US? | CNN\",\"meta-section\":\"world\",\"type\":\"article\",\"og:description\":\"News that the Pentagon is monitoring a suspected Chinese surveillance balloon in the skies over the continental United States raises a series of questions -- not least among them, what exactly it might be doing.\",\"twitter:image\":\"https://media.cnn.com/api/v1/images/stellar/prod/230202153440-suspected-chinese-surveillance-balloon.jpg?c=16x9&q=w_800,c_fill\",\"article:publisher\":\"https://www.facebook.com/CNN\",\"article:tag\":\"asia, aviation and aerospace industry, business and industry sectors, business, economy and trade, china, continents and regions, domestic alerts, domestic-health and science, domestic-international news, domestic-us politics, east asia, electronic communications surveillance, espionage, government and public administration, government bodies and offices, government departments and authorities, iab-aviation industry, iab-business and finance, iab-industries, iab-politics, iab-science, iab-space and astronomy, intelligence services, international alerts, international relations and national security, international-health and science, international-us politics, national security, north america, space and astronomy, space industry, spacecraft and satellites, the americas, united states\",\"fb:app_id\":\"80401312489\",\"twitter:site\":\"@CNN\",\"article:modified_time\":\"2023-02-03T17:32:29Z\",\"viewport\":\"width=device-width,initial-scale=1,shrink-to-fit=no\",\"twitter:description\":\"News that the Pentagon is monitoring a suspected Chinese surveillance balloon in the skies over the continental United States raises a series of questions -- not least among them, what exactly it might be doing.\",\"template_type\":\"article_leaf\",\"theme\":\"world\",\"og:url\":\"https://www.cnn.com/2023/02/02/asia/us-china-spy-balloon-mission-intl-hnk-ml/index.html\"}],\"cse_image\":[{\"src\":\"https://media.cnn.com/api/v1/images/stellar/prod/230202153440-suspected-chinese-surveillance-balloon.jpg?c=16x9&q=w_800,c_fill\"}]}},{\"kind\":\"customsearch#result\",\"title\":\"Suspected Chinese spy balloon moving over U.S.: What we know so ...\",\"htmlTitle\":\"Suspected <b>Chinese</b> spy <b>balloon</b> moving over U.S.: What we know so ...\",\"link\":\"https://www.cbsnews.com/news/chinese-spy-balloon-montana-flight-tracking/\",\"displayLink\":\"www.cbsnews.com\",\"snippet\":\"3 days ago ... Answering a question in Beijing on Friday during a regular briefing, a spokesperson for China's foreign ministry said the country \\\"regrets that ...\",\"htmlSnippet\":\"3 days ago <b>...</b> Answering a question in Beijing on Friday during a regular briefing, a spokesperson for <b>China</b>&#39;s foreign ministry said the country &quot;regrets that&nbsp;...\",\"cacheId\":\"7V0H7R3QmV8J\",\"formattedUrl\":\"https://www.cbsnews.com/.../chinese-spy-balloon-montana-flight-tracking/\",\"htmlFormattedUrl\":\"https://www.cbsnews.com/.../<b>chinese</b>-spy-<b>balloon</b>-montana-flight-tracking/\",\"pagemap\":{\"cse_thumbnail\":[{\"src\":\"https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcQ1c3bRrIjOtjnHSYQJ1hoImdja6j_1_x9tzfrGhQqJlxVlU5y340JDoZM\",\"width\":\"310\",\"height\":\"163\"}],\"metatags\":[{\"og:image\":\"https://assets2.cbsnewsstatic.com/hub/i/r/2023/02/03/4f68b122-4a2f-47c9-9e4a-5612ecafce28/thumbnail/1200x630/24007c5c0b10f54bd665ecb813406fbc/2023-02-03t014624z-1307592946-rc2i2z9akfmq-rtrmadp-3-usa-china-spy.jpg\",\"og:image:width\":\"1200\",\"twitter:card\":\"player\",\"twitter:app:url:ipad\":\"cbsnewsapp://cbsnews.com/news/chinese-spy-balloon-montana-flight-tracking/\",\"og:description\":\"U.S. military leaders recommended against shooting it down as it crossed over the middle of the country due to danger from debris, a senior defense official said.\",\"article:publisher\":\"https://www.facebook.com/CBSNews/\",\"twitter:player\":\"https://www.cbsnews.com/video/suspected-chinese-spy-balloon-moving-east-across-central-us/?embed=1&ftag=CNM-00-10aag7j\",\"twitter:player:stream:content_type\":\"application/x-mpegURL\",\"twitter:app:country\":\"US\",\"twitter:player:stream\":\"https://splice.amlg.io/api/v2/video/ZFEGB7L59aCDrQclvMKSnncqMucWU3Bd/preview/\",\"og:video:type\":\"application/x-mpegURL\",\"og:video:height\":\"1080\",\"al:ios:app_name\":\"CBS News\",\"twitter:app:id:ipad\":\"334256223\",\"fb:pages\":\"131459315949\",\"og:video:width\":\"1920\",\"twitter:app:name:ipad\":\"CBS News\",\"al:android:app_name\":\"CBS News\",\"twitter:app:name:iphone\":\"CBS News\",\"twitter:app:url:iphone\":\"cbsnewsapp://cbsnews.com/news/chinese-spy-balloon-montana-flight-tracking/\",\"twitter:app:id:googleplay\":\"com.treemolabs.apps.cbsnews\",\"theme-color\":\"#101010\",\"al:android:package\":\"com.treemolabs.apps.cbsnews\",\"twitter:app:name:googleplay\":\"CBS News\",\"al:ios:url\":\"cbsnewsapp://cbsnews.com/news/chinese-spy-balloon-montana-flight-tracking/\",\"twitter:app:id:iphone\":\"334256223\",\"al:ios:app_store_id\":\"334256223\",\"twitter:dnt\":\"on\",\"twitter:image\":\"https://assets2.cbsnewsstatic.com/hub/i/r/2023/02/03/4f68b122-4a2f-47c9-9e4a-5612ecafce28/thumbnail/1200x630/24007c5c0b10f54bd665ecb813406fbc/2023-02-03t014624z-1307592946-rc2i2z9akfmq-rtrmadp-3-usa-china-spy.jpg\",\"twitter:player:height\":\"360\",\"twitter:site\":\"@CBSPolitics\",\"news_keywords\":\"China, Canada\",\"article:content_tier\":\"free\",\"og:video:url\":\"https://splice.amlg.io/api/v2/video/ZFEGB7L59aCDrQclvMKSnncqMucWU3Bd/preview/\",\"og:type\":\"article\",\"twitter:title\":\"Biden says U.S. will \\\"take care of\\\" suspected Chinese spy balloon\",\"og:title\":\"Biden says U.S. will \\\"take care of\\\" suspected Chinese spy balloon\",\"og:image:height\":\"630\",\"color-scheme\":\"only light\",\"al:web:url\":\"https://www.cbsnews.com/news/chinese-spy-balloon-montana-flight-tracking/\",\"og:video:secure_url\":\"https://splice.amlg.io/api/v2/video/ZFEGB7L59aCDrQclvMKSnncqMucWU3Bd/preview/\",\"al:android:url\":\"cbsnewsapp://cbsnews.com/news/chinese-spy-balloon-montana-flight-tracking/\",\"fb:app_id\":\"1536620209892267\",\"twitter:app:url:googleplay\":\"cbsnewsapp://cbsnews.com/news/chinese-spy-balloon-montana-flight-tracking/\",\"viewport\":\"width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=0\",\"twitter:description\":\"U.S. military leaders recommended against shooting it down as it crossed over the middle of the country due to danger from debris, a senior defense official said.\",\"og:url\":\"https://www.cbsnews.com/news/chinese-spy-balloon-montana-flight-tracking/\",\"twitter:player:width\":\"640\",\"article:opinion\":\"false\"}],\"cse_image\":[{\"src\":\"https://assets2.cbsnewsstatic.com/hub/i/r/2023/02/03/4f68b122-4a2f-47c9-9e4a-5612ecafce28/thumbnail/1200x630/24007c5c0b10f54bd665ecb813406fbc/2023-02-03t014624z-1307592946-rc2i2z9akfmq-rtrmadp-3-usa-china-spy.jpg\"}]}},{\"kind\":\"customsearch#result\",\"title\":\"What's next in the saga of the suspected Chinese spy balloon : NPR\",\"htmlTitle\":\"What&#39;s next in the saga of the suspected <b>Chinese</b> spy <b>balloon</b> : NPR\",\"link\":\"https://www.npr.org/2023/02/05/1154596301/whats-next-chinese-spy-balloon\",\"displayLink\":\"www.npr.org\",\"snippet\":\"2 days ago ... China said the balloon was a meteorological research vessel blown off course and expressed \\\"strong dissatisfaction and protest\\\" over its downing ...\",\"htmlSnippet\":\"2 days ago <b>...</b> <b>China</b> said the <b>balloon</b> was a meteorological research vessel blown off course and expressed &quot;strong dissatisfaction and protest&quot; over its downing&nbsp;...\",\"formattedUrl\":\"https://www.npr.org/2023/02/05/.../whats-next-chinese-spy-balloon\",\"htmlFormattedUrl\":\"https://www.npr.org/2023/02/05/.../whats-next-<b>chinese</b>-spy-<b>balloon</b>\",\"pagemap\":{\"cse_thumbnail\":[{\"src\":\"https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcTSYtgzuU_epNXedQ2TxBnXx72fyNwIG6X9S1GGzfq5qTuR_9Vg5OYS3vtT\",\"width\":\"300\",\"height\":\"168\"}],\"speakablespecification\":[{\"cssselector\":\"[data-is-speakable]\"}],\"metatags\":[{\"date\":\"2023-02-05\",\"apple-itunes-app\":\"app-id=324906251, app-argument=https://www.npr.org/2023/02/05/1154596301/whats-next-chinese-spy-balloon\",\"og:image\":\"https://media.npr.org/assets/img/2023/02/05/gettyimages-1246795665_wide-e32843d771ef163207543def726d8d4544444572-s1400-c100.jpg\",\"og:type\":\"article\",\"twitter:card\":\"summary_large_image\",\"twitter:title\":\"What's next in the saga of the suspected Chinese spy balloon\",\"og:site_name\":\"NPR\",\"cxenseparse:pageclass\":\"article\",\"twitter:domain\":\"npr.org\",\"cxenseparse:publishtime\":\"2023-02-05T17:33:05-05:00\",\"og:title\":\"What's next in the saga of the suspected Chinese spy balloon\",\"rating\":\"General\",\"og:description\":\"U.S. defense officials are working to recover the wreckage of a Chinese balloon downed near South Carolina, as relations between the two countries are further strained.\",\"fb:pages\":\"10643211755\",\"twitter:image:src\":\"https://media.npr.org/assets/img/2023/02/05/gettyimages-1246795665_wide-e32843d771ef163207543def726d8d4544444572-s1400-c100.jpg\",\"fb:app_id\":\"138837436154588\",\"cxenseparse:author\":\"Joe Hernandez\",\"twitter:site\":\"@NPR\",\"viewport\":\"width=device-width, initial-scale=1, shrink-to-fit=no\",\"article:content_tier\":\"free\",\"og:url\":\"https://www.npr.org/2023/02/05/1154596301/whats-next-chinese-spy-balloon\",\"article:opinion\":\"false\"}],\"cse_image\":[{\"src\":\"https://media.npr.org/assets/img/2023/02/05/gettyimages-1246795665_wide-e32843d771ef163207543def726d8d4544444572-s1400-c100.jpg\"}]}},{\"kind\":\"customsearch#result\",\"title\":\"How a Chinese Spy Balloon Blew Up a Key U.S. Diplomatic Trip\",\"htmlTitle\":\"How a <b>Chinese</b> Spy <b>Balloon</b> Blew <b>Up</b> a Key U.S. Diplomatic Trip\",\"link\":\"https://foreignpolicy.com/2023/02/03/china-spy-balloon-surveillance-montana-us-nuclear-blinken/\",\"displayLink\":\"foreignpolicy.com\",\"snippet\":\"4 days ago ... High-altitude balloons might seem unimpressive compared with satellite imagery that can already pick out minute details from way up in the ...\",\"htmlSnippet\":\"4 days ago <b>...</b> High-altitude <b>balloons</b> might seem unimpressive compared with satellite imagery that can already pick out minute details from way <b>up</b> in the&nbsp;...\",\"formattedUrl\":\"https://foreignpolicy.com/.../china-spy-balloon-surveillance-montana-us- nuclear-blinken/\",\"htmlFormattedUrl\":\"https://foreignpolicy.com/.../<b>china</b>-spy-<b>balloon</b>-surveillance-montana-us- nuclear-blinken/\",\"pagemap\":{\"cse_thumbnail\":[{\"src\":\"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS5f5Hat2EZL--ncel7d0VJ9xqU7ZFUJCBegT6UeIj-afC-wPFcFgCKVuA\",\"width\":\"275\",\"height\":\"183\"}],\"metatags\":[{\"og:image\":\"https://foreignpolicy.com/wp-content/uploads/2023/02/china-montana-balloon-US-airspace-surveillance-AP23034365734757.jpg?w=1000\",\"twitter:card\":\"summary_large_image\",\"theme-color\":\"#eb372e\",\"og:site_name\":\"Foreign Policy\",\"apple-mobile-web-app-title\":\"Foreign Policy\",\"wapogroupsx\":\"default\",\"parsely-author\":\"James Palmer\",\"msapplication-tileimage\":\"https://foreignpolicy.com/wp-content/themes/foreign-policy-2017/assets/src/images/logos/favicon-256.png\",\"og:description\":\"U.S. Secretary of State Antony Blinken has postponed a visit to Beijing in response to a suspected spy balloon over U.S. territory.\",\"twitter:image\":\"https://foreignpolicy.com/wp-content/uploads/2023/02/china-montana-balloon-US-airspace-surveillance-AP23034365734757.jpg?w=1000\",\"pocket-site-verification\":\"21de1071947281ccc893fa0bbfb1f6\",\"parsely-type\":\"post\",\"twitter:site\":\"@ForeignPolicy\",\"parsely-link\":\"http://foreignpolicy.com/2023/02/03/china-spy-balloon-surveillance-montana-us-nuclear-blinken/\",\"parsely-section\":\"Explainer\",\"application-name\":\"Foreign Policy\",\"msapplication-tilecolor\":\"#eb372e\",\"og:type\":\"article\",\"twitter:title\":\"How a Chinese Spy Balloon Blew Up a Key U.S. Diplomatic Trip\",\"author\":\"James Palmer\",\"og:title\":\"How a Chinese Spy Balloon Blew Up a Key U.S. Diplomatic Trip\",\"og:updated_time\":\"1675448539\",\"parsely-title\":\"How a Chinese Spy Balloon Blew Up a Key U.S. Diplomatic Trip\",\"article:author\":\"James Palmer\",\"facebook-domain-verification\":\"mfvc1orqlhwi3yqdn555b9x0atd3ut\",\"parsely-pub-date\":\"2023-02-03T17:37:15Z\",\"fb:app_id\":\"373958131177192\",\"parsely-tags\":\"china,foreign & public diplomacy,great power politics,nuclear weapons,science and technology\",\"viewport\":\"width=device-width, initial-scale=1.0\",\"twitter:description\":\"U.S. Secretary of State Antony Blinken has postponed a visit to Beijing in response to a suspected spy balloon over U.S. territory.\",\"og:url\":\"https://foreignpolicy.com/2023/02/03/china-spy-balloon-surveillance-montana-us-nuclear-blinken/\"}],\"cse_image\":[{\"src\":\"https://foreignpolicy.com/wp-content/uploads/2023/02/china-montana-balloon-US-airspace-surveillance-AP23034365734757.jpg?w=1000\"}]}},{\"kind\":\"customsearch#result\",\"title\":\"Pentagon tracking suspected Chinese spy balloon over the US ...\",\"htmlTitle\":\"Pentagon tracking suspected <b>Chinese</b> spy <b>balloon</b> over the US ...\",\"link\":\"https://www.cnn.com/2023/02/02/politics/us-tracking-china-spy-balloon/index.html\",\"displayLink\":\"www.cnn.com\",\"snippet\":\"4 days ago ... See suspected China spy balloon fly over US skies ... a significant trip meant to follow up on President Joe Biden's meeting with Chinese ...\",\"htmlSnippet\":\"4 days ago <b>...</b> See suspected <b>China</b> spy <b>balloon</b> fly over US skies ... a significant trip meant to follow <b>up</b> on President Joe Biden&#39;s meeting with <b>Chinese</b>&nbsp;...\",\"formattedUrl\":\"https://www.cnn.com/2023/02/02/politics/us...china...balloon/index.html\",\"htmlFormattedUrl\":\"https://www.cnn.com/2023/02/02/politics/us...<b>china</b>...<b>balloon</b>/index.html\",\"pagemap\":{\"cse_thumbnail\":[{\"src\":\"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTEDhN3SQvpvveR5EvPIPMYwK7dcAYBSKjpmhbOKhG-ox5bEUkBx6ChFql1\",\"width\":\"300\",\"height\":\"168\"}],\"metatags\":[{\"og:image\":\"https://media.cnn.com/api/v1/images/stellar/prod/230202153440-suspected-chinese-surveillance-balloon.jpg?c=16x9&q=w_800,c_fill\",\"twitter:title\":\"Pentagon tracking suspected Chinese spy balloon over the US | CNN Politics\",\"og:type\":\"article\",\"twitter:card\":\"summary_large_image\",\"article:published_time\":\"2023-02-02T22:28:58Z\",\"og:site_name\":\"CNN\",\"author\":\"Oren Liebermann,Haley Britzky,Michael Conte,Nectar Gan\",\"og:title\":\"Pentagon tracking suspected Chinese spy balloon over the US | CNN Politics\",\"meta-section\":\"politics\",\"type\":\"article\",\"og:description\":\"The US is tracking a suspected Chinese high-altitude surveillance balloon over the continental United States, defense officials said on Thursday, a discovery that risks adding further strain to tense US-China relations.\",\"twitter:image\":\"https://media.cnn.com/api/v1/images/stellar/prod/230202153440-suspected-chinese-surveillance-balloon.jpg?c=16x9&q=w_800,c_fill\",\"article:publisher\":\"https://www.facebook.com/CNN\",\"fb:app_id\":\"80401312489\",\"twitter:site\":\"@cnnpolitics\",\"article:modified_time\":\"2023-02-03T18:14:36Z\",\"viewport\":\"width=device-width,initial-scale=1,shrink-to-fit=no\",\"twitter:description\":\"The US is tracking a suspected Chinese high-altitude surveillance balloon over the continental United States, defense officials said on Thursday, a discovery that risks adding further strain to tense US-China relations.\",\"template_type\":\"article_leaf\",\"theme\":\"politics\",\"og:url\":\"https://www.cnn.com/2023/02/02/politics/us-tracking-china-spy-balloon/index.html\"}],\"cse_image\":[{\"src\":\"https://media.cnn.com/api/v1/images/stellar/prod/230202153440-suspected-chinese-surveillance-balloon.jpg?c=16x9&q=w_800,c_fill\"}]}},{\"kind\":\"customsearch#result\",\"title\":\"US downs Chinese balloon, drawing a threat from China | AP News\",\"htmlTitle\":\"US downs <b>Chinese balloon</b>, drawing a threat from <b>China</b> | AP News\",\"link\":\"https://apnews.com/article/politics-united-states-government-china-antony-blinken-51e49202f2a0a50541cde059934c4cfb\",\"displayLink\":\"apnews.com\",\"snippet\":\"2 days ago ... WASHINGTON (AP) — The U.S. military on Saturday shot down a suspected Chinese spy balloon off the Carolina coast after it traversed ...\",\"htmlSnippet\":\"2 days ago <b>...</b> WASHINGTON (AP) — The U.S. military on Saturday shot down a suspected <b>Chinese</b> spy <b>balloon</b> off the Carolina coast after it traversed&nbsp;...\",\"cacheId\":\"xmudESOotckJ\",\"formattedUrl\":\"https://apnews.com/.../politics-united-states-government-china-antony- blinken-51e49202f2a0a50541cde059934c4cfb\",\"htmlFormattedUrl\":\"https://apnews.com/.../politics-united-states-government-<b>china</b>-antony- blinken-51e49202f2a0a50541cde059934c4cfb\",\"pagemap\":{\"cse_thumbnail\":[{\"src\":\"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSxjGOUq24jT989pSsexdWkvrHFuXNdaMHlX8Axz0K-sYNQm_bAW-uR1HM\",\"width\":\"251\",\"height\":\"201\"}],\"metatags\":[{\"msapplication-config\":\"browserconfig.xml\",\"og:image\":\"https://storage.googleapis.com/afs-prod/media/dd7715eb81514ad9a155bc9a7ee6cf47/2576.webp\",\"theme-color\":\"#dedede\",\"twitter:card\":\"summary_large_image\",\"og:image:width\":\"3220\",\"article:published_time\":\"2023-02-04T09:47:34Z\",\"og:site_name\":\"AP NEWS\",\"twitter:url\":\"https://apnews.com/article/politics-united-states-government-china-antony-blinken-51e49202f2a0a50541cde059934c4cfb\",\"og:description\":\"WASHINGTON (AP) — The U.S. military on Saturday shot down a suspected Chinese spy balloon off the Carolina coast after it traversed sensitive military sites across North America. China insisted the flyover was an accident involving a civilian aircraft and threatened repercussions.\",\"twitter:image\":\"https://storage.googleapis.com/afs-prod/media/dd7715eb81514ad9a155bc9a7ee6cf47/2576.webp\",\"twitter:site\":\"@ap\",\"article:modified_time\":\"2023-02-05T07:24:27Z\",\"twitter:title\":\"US downs Chinese balloon, drawing a threat from China\",\"og:type\":\"article\",\"article:section\":\"Joe Biden\",\"og:title\":\"US downs Chinese balloon, drawing a threat from China\",\"og:image:height\":\"2576\",\"fb:pages\":\"249655421622\",\"article:tag\":\"Joe Biden\",\"fb:app_id\":\"870613919693099\",\"apple-mobile-web-app-status-bar-style\":\"black\",\"afs_etag\":\"51e49202f2a0a50541cde059934c4cfb_25a14aza0c0\",\"viewport\":\"width=device-width, initial-scale=1\",\"apple-mobile-web-app-capable\":\"yes\",\"twitter:description\":\"WASHINGTON (AP) — The U.S. military on Saturday shot down a suspected Chinese spy balloon off the Carolina coast after it traversed sensitive military sites across North America. China insisted the flyover was an accident involving a civilian aircraft and threatened repercussions.\",\"og:url\":\"https://apnews.com/article/politics-united-states-government-china-antony-blinken-51e49202f2a0a50541cde059934c4cfb\"}],\"cse_image\":[{\"src\":\"https://storage.googleapis.com/afs-prod/media/dd7715eb81514ad9a155bc9a7ee6cf47/2576.webp\"}]}}]}",
+        "output": "json",
+        "x": 920,
+        "y": 300,
+        "wires": [
+            [
+                "3140d99aca7ddcc0"
+            ]
+        ]
+    },
+    {
+        "id": "cf201715b7f659fe",
+        "type": "group",
+        "z": "632ad6779f17902d",
+        "name": "Output - Follow-up question",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "2a9c6d8c87786f2a",
+            "6eb1d94111a37975"
+        ],
+        "x": 834,
+        "y": 419,
+        "w": 352,
+        "h": 82
+    },
+    {
+        "id": "2a9c6d8c87786f2a",
+        "type": "http response",
+        "z": "632ad6779f17902d",
+        "g": "cf201715b7f659fe",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 1110,
+        "y": 460,
+        "wires": []
+    },
+    {
+        "id": "6eb1d94111a37975",
+        "type": "template",
+        "z": "632ad6779f17902d",
+        "g": "cf201715b7f659fe",
+        "name": "Refinement HTML",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "\n      <div class=\"jumbotron jumbotron-fluid\" style=\"border-radius: 100px;\">\n        <div class=\"container\">\n          <blockquote class=\"blockquote text-center\">\n            <p class=\"mb-0\"><span class=\"text-muted\">&ldquo;</span> {{payload.followup}} <span class=\"text-muted\">&rdquo;</span></p>\n          </blockquote>\n        </div>\n      </div>\n\n      <div class=\"jumbotron jumbotron-fluid bg-warning\" style=\"border-radius: 100px;\">\n        <div class=\"container\">\n          <blockquote class=\"blockquote text-center\">\n            <p class=\"mb-0\"><span class=\"text-muted\">&ldquo;</span> {{payload.answer}} <span class=\"text-muted\">&rdquo;</span></p>\n          </blockquote>\n        </div>\n      </div>\n",
+        "output": "str",
+        "x": 950,
+        "y": 460,
+        "wires": [
+            [
+                "2a9c6d8c87786f2a"
+            ]
+        ]
+    }
+]
